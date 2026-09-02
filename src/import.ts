@@ -270,6 +270,7 @@ export function buildBurstSection(raw: RawResults): BenchmarkSection {
 export function buildColdStartSection(raw: RawResults): BenchmarkSection {
   const candidates = raw.results.map((result) =>
     candidate(result, result.coldStart.samplesMs, {
+      "first-tile-mean": { value: round(mean(result.coldStart.samplesMs), 0), unit: "ms", label: "Mean time to first tile" },
       "first-tile-median": { value: round(percentile(result.coldStart.samplesMs, 0.5), 0), unit: "ms", label: "Median time to first tile" },
       "idle-rss": { value: round(result.coldStart.idleRssMb, 1), unit: "MB", label: "Idle RSS after start" },
       "rss-after-load": { value: round(result.rssAfterLoadMb, 1), unit: "MB", label: "RSS after the load passes" },
@@ -279,10 +280,10 @@ export function buildColdStartSection(raw: RawResults): BenchmarkSection {
     {
       id: "first-tile",
       title: "Time to first tile",
-      description: "Median time from container process start until the building tile is served, including schema discovery.",
+      description: "Mean time from container process start until the building tile is served, including schema discovery, over five starts.",
       unit: "ms",
       lowerIsBetter: true,
-      results: raw.results.map((r) => ({ candidateId: r.engine, value: round(percentile(r.coldStart.samplesMs, 0.5), 0) })),
+      results: raw.results.map((r) => ({ candidateId: r.engine, value: round(mean(r.coldStart.samplesMs), 0) })),
     },
     {
       id: "idle-rss",
@@ -301,7 +302,7 @@ export function buildColdStartSection(raw: RawResults): BenchmarkSection {
       results: raw.results.map((r) => ({ candidateId: r.engine, value: round(r.rssAfterLoadMb, 1) })),
     },
   ];
-  const ranked = [...candidates].sort((a, b) => a.statistics.medianMs - b.statistics.medianMs);
+  const ranked = [...candidates].sort((a, b) => a.statistics.meanMs - b.statistics.meanMs);
   const best = ranked[0]!;
   const worst = ranked[ranked.length - 1]!;
   return {
@@ -312,8 +313,8 @@ export function buildColdStartSection(raw: RawResults): BenchmarkSection {
     lowerIsBetter: true,
     verdict: {
       winnerId: best.id,
-      headline: `${best.name} served its first tile ${fmtMs(best.statistics.medianMs)} after process start; ${worst.name} took ${fmtMs(worst.statistics.medianMs)}`,
-      summary: "Each sample is one container start measured from Docker's StartedAt to the first 200 response.",
+      headline: `${best.name} served its first tile ${fmtMs(best.statistics.meanMs)} after process start on average; ${worst.name} took ${fmtMs(worst.statistics.meanMs)}`,
+      summary: "Each sample is one container start measured from Docker's StartedAt to the first 200 response; five starts per server.",
     },
     candidates,
     tests,

@@ -77,8 +77,11 @@ describe("run import", () => {
     expect(run.sections[3]!.tests.map((t) => t.id)).toEqual(["first-tile", "idle-rss", "loaded-rss"]);
   });
 
-  test("picks the faster engine as every section's winner", () => {
+  test("picks the faster engine as every section's winner, by mean", () => {
     for (const section of run.sections) expect(section.verdict.winnerId).toBe("martin");
+    const coldStart = run.sections[3]!;
+    expect(coldStart.tests[0]!.results.find((r) => r.candidateId === "martin")?.value).toBe(500);
+    expect(coldStart.verdict.headline).toContain("500 ms after process start on average");
   });
 
   test("carries samples through and summarises them", () => {

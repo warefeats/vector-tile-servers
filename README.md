@@ -100,15 +100,15 @@ See `runs/` for the published run files and the [benchmark page](https://warefea
 
 Full protocol on the reference rig; the run file is [`runs/2026-09-02-m2-max.json`](runs/2026-09-02-m2-max.json). Verdict and limitations are in [`benchmark.json`](benchmark.json).
 
-| Candidate | Buildings z14, 1 client (mean) | Tiles/s at 10 clients | Tiles/s at 100 clients | p99 at 100 clients | Viewport, 4 tiles (mean) | First tile after start (median) | RSS idle / after load |
+| Candidate | Buildings z14, 1 client (mean) | Tiles/s at 10 clients | Tiles/s at 100 clients | p99 at 100 clients | Viewport, 4 tiles (mean) | First tile after start (mean of 5) | RSS idle / after load |
 |-----------|-------------------------------:|----------------------:|-----------------------:|-------------------:|-------------------------:|-------------------------------:|----------------------:|
-| Martin 1.14.0 | 13.6 ms | 485 | 467 | 234 ms | 5.5 ms | 130 ms | 9 / 40 MB |
-| Tegola 0.21.2 | 15.6 ms | 265 | 255 | 1.14 s | 7.5 ms | 141 ms | 8 / 47 MB |
-| BBOX 0.6.2 | 15.2 ms | 494 | 395 | 289 ms | 6.6 ms | 145 ms | 11 / 42 MB |
+| Martin 1.14.0 | 13.6 ms | 485 | 467 | 234 ms | 5.5 ms | 133 ms | 9 / 40 MB |
+| Tegola 0.21.2 | 15.6 ms | 265 | 255 | 1.14 s | 7.5 ms | 142 ms | 8 / 47 MB |
+| BBOX 0.6.2 | 15.2 ms | 494 | 395 | 289 ms | 6.6 ms | 147 ms | 11 / 42 MB |
 | pg_tileserv 20250131 | 13.7 ms | 221 | 169 (0.15% errors) | 1.14 s | 5.4 ms | 149 ms | 4 / 41 MB |
-| TiPg 1.5.0 | 13.8 ms | 332 | 456 | 486 ms | 10.2 ms | 498 ms | 214 / 241 MB |
-| ldproxy 4.8.1 | 120.8 ms | 33 | 25 | 4.96 s | 51.7 ms | 2.84 s | 479 / 3,226 MB |
-| ldproxy 4.8.1 (PGIS_TILES) | 18.9 ms | 249 | 226 | 1.14 s | 10.5 ms | 2.63 s | 448 / 696 MB |
+| TiPg 1.5.0 | 13.8 ms | 332 | 456 | 486 ms | 10.2 ms | 508 ms | 214 / 241 MB |
+| ldproxy 4.8.1 | 120.8 ms | 33 | 25 | 4.96 s | 51.7 ms | 3.71 s | 479 / 3,226 MB |
+| ldproxy 4.8.1 (PGIS_TILES) | 18.9 ms | 249 | 226 | 1.14 s | 10.5 ms | 3.69 s | 448 / 696 MB |
 
 Roads, points and boundary tiles at one client: Martin 7.2 / 7.7 / 8.9 ms, BBOX 9.6 / 10.2 / 10.3 ms, TiPg 9.2 / 8.8 / 10.4 ms, pg_tileserv 12.9 / 13.9 / 9.2 ms, Tegola 16.5 / 17.4 / 10.8 ms, ldproxy (PGIS_TILES) 15.1 / 16.2 / 9.3 ms, ldproxy 83.6 / 89.4 / 25.4 ms. The gzip-negotiated buildings tile took 14.9 ms on Tegola (its native path) and 15 to 19 ms on the others; stock ldproxy 119 ms.
 
