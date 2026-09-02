@@ -26,6 +26,8 @@ BBOX is built from source because the only published image (`sourcepole/bbox-ser
 
 Every server connects to the database as the same read-only role (`tiles`) with the same privileges, sees the same four tables, and is asked for the same tile coordinates.
 
+The benchmark page shows each candidate by name and brand colour, not by logo. None of the six projects publishes a trademark policy that licenses its mark for third-party use; the logo files that ship in the Martin and TiPg repositories are covered by those repositories' MIT licence as copyrighted files, which is not a licence to the mark. That is the same line the Redis vs Valkey vs Dragonfly page drew.
+
 ## Corpus
 
 The [Geofabrik Berlin extract of 2026-01-01](https://download.geofabrik.de/europe/germany/berlin-260101.osm.pbf), 95,916,520 bytes, MD5 `6d6de8da2d8192c5bbe7dd00e1004c82` (Geofabrik's published checksum), SHA-256 `9a5dff3801473f7d59dc41cad2224c6f590d7d0cb9d8dc0789970902f13c6e94`. The runner downloads it into `data/cache/` and refuses to import a file whose MD5 differs.
