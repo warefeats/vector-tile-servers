@@ -1,0 +1,17 @@
+services:
+  engine:
+    image: ghcr.io/developmentseed/tipg:1.5.0
+    env_file:
+      - ../configs/tipg/tipg.env
+    ports:
+      - "127.0.0.1:${ENGINE_PORT:-8099}:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+
+networks:
+  default:
+    name: vts
+    external: true

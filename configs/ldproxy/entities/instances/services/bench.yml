@@ -1,0 +1,16 @@
+---
+id: bench
+entityStorageVersion: 2
+serviceType: OGC_API
+label: bench
+enabled: true
+auto: true
+apiValidation: NONE
+api:
+  - buildingBlock: FEATURES_CORE
+    enabled: true
+  - buildingBlock: TILE_MATRIX_SETS
+    enabled: true
+  - buildingBlock: TILES
+    enabled: true
+    tileProvider: bench-tiles

@@ -1,0 +1,21 @@
+services:
+  engine:
+    image: vts-bbox:0.6.2
+    build:
+      context: ..
+      dockerfile: Dockerfile.bbox
+    command: ["bbox-tile-server", "-c", "/config/bbox.toml", "serve"]
+    volumes:
+      - ../configs/bbox:/config:ro
+    ports:
+      - "127.0.0.1:${ENGINE_PORT:-8099}:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+
+networks:
+  default:
+    name: vts
+    external: true

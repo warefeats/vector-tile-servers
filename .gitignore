@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.DS_Store
+.env
+.env.*
+!.env.example
+coverage/
+*.tsbuildinfo
+results.json
+results/
+data/cache/
+
+# Local Claude Code config
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+AGENTS.md

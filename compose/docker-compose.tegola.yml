@@ -1,0 +1,21 @@
+services:
+  engine:
+    image: gospatial/tegola:v0.21.2
+    command: ["serve", "--config", "/config/config.toml"]
+    environment:
+      DATABASE_URL: postgresql://tiles:tiles@db:5432/bench
+      GOMAXPROCS: "4"
+    volumes:
+      - ../configs/tegola:/config:ro
+    ports:
+      - "127.0.0.1:${ENGINE_PORT:-8099}:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+
+networks:
+  default:
+    name: vts
+    external: true

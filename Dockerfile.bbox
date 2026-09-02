@@ -1,0 +1,21 @@
+# BBOX tile server v0.6.2, built from the tagged source because the published
+# sourcepole/bbox-server-qgis image is amd64-only and would run under emulation on arm64.
+FROM rust:1.83.0-bookworm AS builder
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends protobuf-compiler git \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+ARG BBOX_TAG=v0.6.2
+RUN git clone --depth 1 --branch ${BBOX_TAG} https://github.com/bbox-services/bbox.git .
+# Tile server only: the map-server (QGIS/MapServer FCGI) and asset-server features are not exercised here.
+RUN cargo build --release --locked -p bbox-tile-server --no-default-features
+
+FROM debian:bookworm-slim
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /src/target/release/bbox-tile-server /usr/local/bin/bbox-tile-server
+ENV BBOX_WEBSERVER__SERVER_ADDR="0.0.0.0:8080"
+WORKDIR /config
+EXPOSE 8080
+CMD ["bbox-tile-server", "serve"]

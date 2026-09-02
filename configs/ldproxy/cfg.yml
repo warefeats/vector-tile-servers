@@ -1,0 +1,19 @@
+---
+store:
+  mode: READ_ONLY
+server:
+  applicationConnectors:
+    - type: http
+      port: 7080
+  adminConnectors:
+    - type: http
+      port: 7081
+  requestLog:
+    type: classic
+    appenders: []
+logging:
+  level: 'OFF'
+  appenders:
+    - type: console
+  loggers:
+    de.ii: WARN

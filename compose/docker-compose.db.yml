@@ -1,0 +1,61 @@
+# PostGIS backing store shared by every engine. Started once per benchmark run and left up
+# across engine cycles; engines join the `vts` network by name.
+services:
+  db:
+    image: imresamu/postgis:18-3.6
+    container_name: vts-db
+    command:
+      - postgres
+      - -c
+      - shared_buffers=2GB
+      - -c
+      - work_mem=64MB
+      - -c
+      - effective_cache_size=8GB
+      - -c
+      - max_connections=100
+      - -c
+      - random_page_cost=1.1
+    environment:
+      POSTGRES_PASSWORD: bench
+      POSTGRES_DB: bench
+    shm_size: 2g
+    volumes:
+      - dbdata:/var/lib/postgresql
+      - ../data/initdb/00-init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+      - ../data:/data:ro
+    ports:
+      - "127.0.0.1:${DB_PORT:-5439}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bench"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: "6"
+          memory: 12G
+
+  loader:
+    image: ghcr.io/osgeo/gdal:alpine-small-3.13.3
+    profiles: ["load"]
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../data:/data:ro
+    environment:
+      PGHOST: db
+      PGDATABASE: bench
+      PGUSER: postgres
+      PGPASSWORD: bench
+      CORPUS: ${CORPUS:-berlin-260101.osm.pbf}
+    entrypoint: ["/bin/sh", "/data/import.sh"]
+
+networks:
+  default:
+    name: vts
+
+volumes:
+  dbdata:

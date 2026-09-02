@@ -1,0 +1,20 @@
+services:
+  engine:
+    image: ghcr.io/maplibre/martin:1.14.0
+    command: ["--config", "/config/config.yaml"]
+    environment:
+      DATABASE_URL: postgresql://tiles:tiles@db/bench
+    volumes:
+      - ../configs/martin:/config:ro
+    ports:
+      - "127.0.0.1:${ENGINE_PORT:-8099}:3000"
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+
+networks:
+  default:
+    name: vts
+    external: true

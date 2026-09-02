@@ -1,0 +1,122 @@
+---
+id: bench
+entityStorageVersion: 2
+providerType: FEATURE
+providerSubType: SQL
+nativeCrs:
+  code: 3857
+  forceAxisOrder: NONE
+connectionInfo:
+  dialect: PGIS
+  database: bench
+  host: db
+  user: tiles
+  password: dGlsZXM=
+  schemas:
+    - bench
+  pool:
+    maxConnections: 8
+    minConnections: 1
+    initFailFast: true
+sourcePathDefaults:
+  primaryKey: fid
+  sortKey: fid
+types:
+  buildings:
+    sourcePath: /buildings
+    type: OBJECT
+    properties:
+      fid:
+        sourcePath: fid
+        type: INTEGER
+        role: ID
+      osm_id:
+        sourcePath: osm_id
+        type: STRING
+      name:
+        sourcePath: name
+        type: STRING
+      building:
+        sourcePath: building
+        type: STRING
+      geom:
+        sourcePath: geom
+        type: GEOMETRY
+        role: PRIMARY_GEOMETRY
+        geometryType: MULTI_POLYGON
+  roads:
+    sourcePath: /roads
+    type: OBJECT
+    properties:
+      fid:
+        sourcePath: fid
+        type: INTEGER
+        role: ID
+      osm_id:
+        sourcePath: osm_id
+        type: STRING
+      name:
+        sourcePath: name
+        type: STRING
+      highway:
+        sourcePath: highway
+        type: STRING
+      geom:
+        sourcePath: geom
+        type: GEOMETRY
+        role: PRIMARY_GEOMETRY
+        geometryType: LINE_STRING
+  pois:
+    sourcePath: /pois
+    type: OBJECT
+    properties:
+      fid:
+        sourcePath: fid
+        type: INTEGER
+        role: ID
+      osm_id:
+        sourcePath: osm_id
+        type: STRING
+      name:
+        sourcePath: name
+        type: STRING
+      amenity:
+        sourcePath: amenity
+        type: STRING
+      shop:
+        sourcePath: shop
+        type: STRING
+      tourism:
+        sourcePath: tourism
+        type: STRING
+      geom:
+        sourcePath: geom
+        type: GEOMETRY
+        role: PRIMARY_GEOMETRY
+        geometryType: POINT
+  boundaries:
+    sourcePath: /boundaries
+    type: OBJECT
+    properties:
+      fid:
+        sourcePath: fid
+        type: INTEGER
+        role: ID
+      osm_id:
+        sourcePath: osm_id
+        type: STRING
+      name:
+        sourcePath: name
+        type: STRING
+      admin_level:
+        sourcePath: admin_level
+        type: STRING
+      geom:
+        sourcePath: geom
+        type: GEOMETRY
+        role: PRIMARY_GEOMETRY
+        geometryType: MULTI_POLYGON
+extensions:
+  - type: PGIS_TILES
+    enabled: true
+    unsupportedProperties: IGNORE

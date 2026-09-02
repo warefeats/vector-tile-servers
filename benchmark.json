@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "vector-tile-servers-2026-09",
+  "slug": "postgis-vector-tile-servers",
+  "category": "Tile servers",
+  "title": "Martin vs Tegola vs BBOX vs pg_tileserv vs TiPg vs ldproxy",
+  "deck": "Six open-source vector tile servers generating Mapbox Vector Tiles on the fly from the same PostGIS database, on a pinned Berlin OpenStreetMap corpus: single-tile latency, throughput at 10 and 100 clients, four-tile viewport bursts, cold start and memory. A re-run of the 2024 Rechsteiner thesis matrix on current releases.",
+  "unit": "ms",
+  "lowerIsBetter": true,
+  "verdict": {
+    "winnerId": "martin",
+    "headline": "Martin led single-tile latency, throughput and cold start; the five servers that encode in PostGIS finished within 2 ms of each other on one tile, and ldproxy's opt-in PGIS_TILES mode cut its gap from 9x to 1.4x",
+    "summary": "On the 2,000-building Prenzlauer Berg tile Martin 1.14.0 averaged 13.6 ms; pg_tileserv, TiPg, BBOX and Tegola followed within 2 ms, ldproxy with PGIS_TILES at 18.9 ms, and stock ldproxy 4.8.1 at 121 ms. Under 100 closed-loop clients Martin held 467 tiles/s at a 234 ms p99, TiPg 456 tiles/s, BBOX 395, Tegola 255, ldproxy (PGIS_TILES) 226, pg_tileserv 169 with 0.15% dropped connections, and stock ldproxy 25 tiles/s at a 5.0 s p99. The Rust and Go servers served their first tile 130 to 150 ms after process start and sat at 40 to 47 MB after load; TiPg took 0.5 s and 241 MB, ldproxy 2.5 to 2.8 s and 0.7 GB (PGIS_TILES) or 3.2 GB (stock). The thesis ranking held at the top and bottom, Martin first and stock ldproxy last; TiPg 1.5.0 with four workers moved from fifth to second on throughput, and Tegola from second to fourth."
+  },
+  "trademarks": [
+    "Martin is a project of the MapLibre organization.",
+    "Tegola is a project of the Go Spatial organization.",
+    "BBOX is developed by Sourcepole.",
+    "pg_tileserv is developed by Crunchy Data.",
+    "TiPg is developed by Development Seed.",
+    "ldproxy is developed by interactive instruments GmbH.",
+    "Map data: OpenStreetMap contributors, ODbL, via the Geofabrik Berlin extract of 2026-01-01."
+  ],
+  "limitations": [
+    "One laptop: PostGIS (6 CPUs, 12 GB), the server under test (4 CPUs, 4 GB) and the load generator all shared a 12-core M2 Max under OrbStack. Numbers are relative to each other, not absolute capacity.",
+    "Every server ran an 8-connection database pool because BBOX 0.6.2 hard-codes 8. The 100-client test therefore measures how each server queues 100 clients onto 8 database connections; untuned Tegola (default pool 100) or Martin (default 20) may behave differently.",
+    "Tiles were requested without Accept-Encoding, as the thesis's JMeter plans did. Tegola gzips every tile internally and decompresses it again for such clients, so its uncompressed path does more work than its gzip path (5% at one client); browser clients, which accept gzip, would narrow Tegola's 100-client gap.",
+    "The servers do not select exactly the same features: Martin, BBOX and pg_tileserv query the buffered tile envelope (2,123 buildings, 58 boundary polygons), Tegola, TiPg and ldproxy the unbuffered one (2,017 to 2,019 buildings, 55 polygons), and stock ldproxy additionally drops features under half a pixel and simplifies geometry (1,998 buildings; an 11 KB boundary tile against 30 KB). Stock ldproxy did the least encoding work and was still slowest.",
+    "pg_tileserv's tiles are about 20% larger than Martin's for the same feature set, which its single-connection times absorb but its throughput pays for.",
+    "ldproxy appears twice on purpose. Stock ldproxy encodes tiles in Java from a feature query; PGIS_TILES (opt-in since 4.4) moves encoding into PostGIS and only supports simple mappings without joins, arrays or transformations. Its JVM was allowed 75% of the 4 GB container, above the 25% default.",
+    "pg_tileserv's default 10-second database timeout was raised to 60 s so it could not fail requests the other servers would have served; it still closed 25 of 16,280 connections at 100 clients.",
+    "TiPg ran four gunicorn workers to match the four CPUs; its image defaults to one. One-worker TiPg is a different benchmark.",
+    "Cold start is process start to first tile, so it includes schema discovery on four tables; ldproxy's also includes auto-generating the API configuration from the provider. Two of ldproxy's five starts took twice as long as the other three.",
+    "Memory is Docker's reported usage for the container (cgroup usage minus inactive file cache), sampled once idle and once after the 100-client passes.",
+    "Load repeatedly requested one z14 tile with the PostgreSQL buffer cache warm, so this is server and encoder overhead over a hot database, not cache-miss or cold-disk behaviour, and no CDN or tile cache sits in front.",
+    "Single run on one day. Martin's throughput dipped 20% in its last two 100-client passes; every sample is in the run file.",
+    "Martin's tile bytes vary by about 1% between identical requests because PostgreSQL does not fix feature order; the parity check compares feature counts."
+  ],
+  "runs": [
+    "runs/2026-09-02-m2-max.json"
+  ]
+}

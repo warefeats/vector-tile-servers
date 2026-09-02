@@ -1,0 +1,66 @@
+# BBOX tile server v0.6.2 (built from source, see Dockerfile.bbox). No tile cache configured.
+[webserver]
+server_addr = "0.0.0.0:8080"
+worker_threads = 4
+loglevel = "Warn"
+
+[[datasource]]
+name = "bench"
+[datasource.postgis]
+url = "postgresql://tiles:tiles@db/bench"
+
+[[tileset]]
+name = "buildings"
+[tileset.postgis]
+datasource = "bench"
+[[tileset.postgis.layer]]
+name = "buildings"
+table_name = "bench.buildings"
+geometry_field = "geom"
+geometry_type = "MULTIPOLYGON"
+fid_field = "fid"
+srid = 3857
+tile_size = 4096
+buffer_size = 64
+
+[[tileset]]
+name = "roads"
+[tileset.postgis]
+datasource = "bench"
+[[tileset.postgis.layer]]
+name = "roads"
+table_name = "bench.roads"
+geometry_field = "geom"
+geometry_type = "LINESTRING"
+fid_field = "fid"
+srid = 3857
+tile_size = 4096
+buffer_size = 64
+
+[[tileset]]
+name = "pois"
+[tileset.postgis]
+datasource = "bench"
+[[tileset.postgis.layer]]
+name = "pois"
+table_name = "bench.pois"
+geometry_field = "geom"
+geometry_type = "POINT"
+fid_field = "fid"
+srid = 3857
+tile_size = 4096
+buffer_size = 64
+
+[[tileset]]
+name = "boundaries"
+[tileset.postgis]
+datasource = "bench"
+[[tileset.postgis.layer]]
+name = "boundaries"
+table_name = "bench.boundaries"
+geometry_field = "geom"
+geometry_type = "MULTIPOLYGON"
+fid_field = "fid"
+srid = 3857
+tile_size = 4096
+buffer_size = 64

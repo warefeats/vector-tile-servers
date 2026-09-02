@@ -1,0 +1,23 @@
+# ldproxy with the opt-in PGIS_TILES extension (ST_AsMVT in PostGIS, ldproxy >= 4.4).
+# Same image and store as docker-compose.ldproxy.yml; only the feature provider file differs.
+services:
+  engine:
+    image: iide/ldproxy:4.8.1
+    environment:
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
+    volumes:
+      - ../configs/ldproxy/cfg.yml:/ldproxy/data/cfg.yml:ro
+      - ../configs/ldproxy/entities:/ldproxy/data/entities:ro
+      - ../configs/ldproxy/providers/bench-pgis.yml:/ldproxy/data/entities/instances/providers/bench.yml:ro
+    ports:
+      - "127.0.0.1:${ENGINE_PORT:-8099}:7080"
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+
+networks:
+  default:
+    name: vts
+    external: true

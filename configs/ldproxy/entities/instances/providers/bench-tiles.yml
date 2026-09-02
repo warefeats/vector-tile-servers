@@ -1,0 +1,19 @@
+---
+id: bench-tiles
+entityStorageVersion: 2
+providerType: TILE
+providerSubType: FEATURES
+tilesetDefaults:
+  levels:
+    WebMercatorQuad:
+      min: 0
+      max: 22
+tilesets:
+  buildings:
+    id: buildings
+  roads:
+    id: roads
+  pois:
+    id: pois
+  boundaries:
+    id: boundaries

@@ -1,0 +1,14 @@
+# pg_tileserv (image pramsey/pg_tileserv:20250131). Connection comes from DATABASE_URL.
+DbPoolMaxConns = 8
+# Default is 10 s; the other servers have no per-request database timeout, so give tiles the
+# same 60 s budget the load generator uses.
+DbTimeout = 60
+HttpHost = "0.0.0.0"
+HttpPort = 7800
+CacheTTL = 0
+DefaultResolution = 4096
+DefaultBuffer = 64
+MaxFeaturesPerTile = -1
+DefaultMinZoom = 0
+DefaultMaxZoom = 22
+Debug = false

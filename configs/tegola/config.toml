@@ -1,0 +1,61 @@
+# Tegola v0.21.2, mvt_postgis provider (ST_AsMVT in the database). No [cache] section: uncached.
+[webserver]
+port = ":8080"
+
+[[providers]]
+name = "bench"
+type = "mvt_postgis"
+uri = "${DATABASE_URL}?sslmode=disable&pool_max_conns=8&pool_min_conns=1"
+srid = 3857
+
+  [[providers.layers]]
+  name = "buildings"
+  geometry_fieldname = "geom"
+  id_fieldname = "fid"
+  geometry_type = "multipolygon"
+  sql = "SELECT ST_AsMVTGeom(geom, !BBOX!, 4096, 64, true) AS geom, fid, osm_id, name, building FROM bench.buildings WHERE geom && !BBOX!"
+
+  [[providers.layers]]
+  name = "roads"
+  geometry_fieldname = "geom"
+  id_fieldname = "fid"
+  geometry_type = "linestring"
+  sql = "SELECT ST_AsMVTGeom(geom, !BBOX!, 4096, 64, true) AS geom, fid, osm_id, name, highway FROM bench.roads WHERE geom && !BBOX!"
+
+  [[providers.layers]]
+  name = "pois"
+  geometry_fieldname = "geom"
+  id_fieldname = "fid"
+  geometry_type = "point"
+  sql = "SELECT ST_AsMVTGeom(geom, !BBOX!, 4096, 64, true) AS geom, fid, osm_id, name, amenity, shop, tourism FROM bench.pois WHERE geom && !BBOX!"
+
+  [[providers.layers]]
+  name = "boundaries"
+  geometry_fieldname = "geom"
+  id_fieldname = "fid"
+  geometry_type = "multipolygon"
+  sql = "SELECT ST_AsMVTGeom(geom, !BBOX!, 4096, 64, true) AS geom, fid, osm_id, name, admin_level FROM bench.boundaries WHERE geom && !BBOX!"
+
+[[maps]]
+name = "bench"
+tile_buffer = 64
+
+  [[maps.layers]]
+  provider_layer = "bench.buildings"
+  min_zoom = 0
+  max_zoom = 22
+
+  [[maps.layers]]
+  provider_layer = "bench.roads"
+  min_zoom = 0
+  max_zoom = 22
+
+  [[maps.layers]]
+  provider_layer = "bench.pois"
+  min_zoom = 0
+  max_zoom = 22
+
+  [[maps.layers]]
+  provider_layer = "bench.boundaries"
+  min_zoom = 0
+  max_zoom = 22
