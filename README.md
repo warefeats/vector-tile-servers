@@ -1,6 +1,6 @@
 # Martin vs Tegola vs BBOX vs pg_tileserv vs TiPg vs ldproxy — PostGIS vector tile servers
 
-The runner behind [warefeats.com/benchmarks/postgis-vector-tile-servers/](https://warefeats.com/benchmarks/postgis-vector-tile-servers/). Six open-source servers generate Mapbox Vector Tiles on the fly from the same PostGIS database, and this runner measures single-tile latency, throughput under 10 and 100 concurrent clients, four-tile viewport bursts, time to first tile after a cold start, and resident memory. Part of the [warefeats](https://warefeats.com) benchmark suite.
+The runner behind [warefeats.com/posts/2026-09-02-vector-tile-servers-martin-vs-tegola-vs-bbox-vs-pg-tileserv-vs-tipg-vs-ldproxy/](https://warefeats.com/posts/2026-09-02-vector-tile-servers-martin-vs-tegola-vs-bbox-vs-pg-tileserv-vs-tipg-vs-ldproxy/). Six open-source servers generate Mapbox Vector Tiles on the fly from the same PostGIS database, and this runner measures single-tile latency, throughput under 10 and 100 concurrent clients, four-tile viewport bursts, time to first tile after a cold start, and resident memory. Part of the [warefeats](https://warefeats.com) benchmark suite.
 
 ## Lineage
 
@@ -94,7 +94,7 @@ The published run file carries every sample. `bun run src/run.ts --smoke` runs a
 
 ## Results
 
-See `runs/` for the published run files and the [benchmark page](https://warefeats.com/benchmarks/postgis-vector-tile-servers/) for charts and the verdict.
+See `runs/` for the published run files and the [post](https://warefeats.com/posts/2026-09-02-vector-tile-servers-martin-vs-tegola-vs-bbox-vs-pg-tileserv-vs-tipg-vs-ldproxy/) for charts and the verdict.
 
 ### Run 2026-09-02, M2 Max (local)
 
