@@ -8,6 +8,7 @@
   "deck": "Six open-source vector tile servers generating Mapbox Vector Tiles on the fly from the same PostGIS database, on a pinned Berlin OpenStreetMap corpus: single-tile latency, throughput at 10 and 100 clients, four-tile viewport bursts, cold start and memory. A re-run of the 2024 Rechsteiner thesis matrix on current releases.",
   "unit": "ms",
   "lowerIsBetter": true,
+  "sectionSamples": "repeats",
   "verdict": {
     "winnerId": "martin",
     "headline": "Martin led single-tile latency, throughput and cold start; the five servers that encode in PostGIS finished within 2 ms of each other on one tile, and ldproxy's opt-in PGIS_TILES mode cut its gap from 9x to 1.4x",
