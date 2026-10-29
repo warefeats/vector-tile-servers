@@ -1,5 +1,9 @@
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
-import { buildRun, orderResults, rigSlug, type RunMetadata } from "../src/import";
+import { agrees, enrichRunFile } from "../src/enrich";
+import { type BenchmarkTest, buildRun, orderResults, rigSlug, type RunMetadata } from "../src/import";
 import { parseOha } from "../src/load-runner";
 import type { Engine } from "../src/matrix";
 import type { EngineResult, RawResults } from "../src/run";
@@ -26,7 +30,7 @@ function engineResult(engine: Engine, scale: number): EngineResult {
     single: { "buildings-z14": tile(20 * scale), "roads-z14": tile(15 * scale), "pois-z14": tile(10 * scale), "boundaries-z9": tile(30 * scale), "buildings-z14-gzip": tile(25 * scale) },
     burst: { samplesMs: [40 * scale, 42 * scale, 38 * scale], meanMs: 40 * scale, p50Ms: 40 * scale, maxMs: 42 * scale, slowestTileMeanMs: 30 * scale, errorRate: 0 },
     concurrency: {
-      "10": { connections: 10, samplesP99Ms: [50 * scale, 55 * scale], samplesRps: [200 / scale, 210 / scale], rps: 205 / scale, p50Ms: 30 * scale, p99Ms: 52 * scale, errorRate: 0, completed: 4000, transportErrors: 0, statusCodes: { "200": 4000 }, errorDistribution: {}, minCompletedPerPass: 1900 },
+      "10": { connections: 10, samplesP99Ms: [50 * scale, 55 * scale], samplesRps: [200 / scale, 210 / scale], rps: 205 / scale, p50Ms: 30 * scale, p99Ms: 52.5 * scale, errorRate: 0, completed: 4000, transportErrors: 0, statusCodes: { "200": 4000 }, errorDistribution: {}, minCompletedPerPass: 1900 },
       "100": { connections: 100, samplesP99Ms: [500 * scale, null], samplesRps: [220 / scale, 230 / scale], rps: 225 / scale, p50Ms: 300 * scale, p99Ms: 500 * scale, errorRate: 0.01, completed: 4400, transportErrors: 44, statusCodes: { "200": 4400 }, errorDistribution: { timeout: 44 }, minCompletedPerPass: 2100 },
     },
     rssAfterLoadMb: 80 * scale,
@@ -96,6 +100,41 @@ describe("run import", () => {
     expect(run.sections[1]!.lowerIsBetter).toBe(false);
   });
 
+  test("names each test's statistic and carries the per-pass samples its value summarizes", () => {
+    const martin = RAW.results.find((r) => r.engine === "martin")!;
+    const find = (section: number, id: string): BenchmarkTest => run.sections[section]!.tests.find((t) => t.id === id)!;
+    const martinRow = (t: BenchmarkTest) => t.results.find((r) => r.candidateId === "martin")!;
+    expect(find(0, "mean-buildings-z14").statistic).toBe("mean");
+    expect(martinRow(find(0, "mean-buildings-z14")).samples).toEqual(martin.single["buildings-z14"]!.samplesMs);
+    expect(find(0, "mean-buildings-z14-gzip").statistic).toBe("mean");
+    expect(martinRow(find(0, "mean-buildings-z14-gzip")).samples).toEqual(martin.single["buildings-z14-gzip"]!.samplesMs);
+    expect(find(1, "rps-c100").statistic).toBe("mean");
+    expect(martinRow(find(1, "rps-c100")).samples).toEqual([220, 230]);
+    expect(find(1, "p99-c10").statistic).toBe("median");
+    expect(martinRow(find(1, "p99-c10")).samples).toEqual([50, 55]);
+    // The pass that completed no request has no p99 and is not a sample.
+    expect(martinRow(find(1, "p99-c100")).samples).toEqual([500]);
+    expect(find(1, "errors-c100").statistic).toBe("other");
+    for (const result of find(1, "errors-c100").results) expect(Object.keys(result)).toEqual(["candidateId", "value"]);
+    expect(find(2, "burst-mean").statistic).toBe("mean");
+    expect(martinRow(find(2, "burst-mean")).samples).toEqual([40, 42, 38]);
+    expect(find(2, "burst-max").statistic).toBe("max");
+    expect(martinRow(find(2, "burst-max")).samples).toEqual([40, 42, 38]);
+    expect(martinRow(find(2, "burst-max")).value).toBe(42);
+    expect(find(3, "first-tile").statistic).toBe("mean");
+    expect(martinRow(find(3, "first-tile")).samples).toEqual([500, 520, 480]);
+    expect(find(3, "idle-rss").statistic).toBe("mean");
+    expect(martinRow(find(3, "idle-rss")).samples).toEqual([50]);
+    expect(find(3, "loaded-rss").statistic).toBe("mean");
+    expect(martinRow(find(3, "loaded-rss")).samples).toEqual([80]);
+  });
+
+  test("writes a test's keys and a result's keys in the contract's order", () => {
+    const burst = run.sections[2]!.tests[0]!;
+    expect(Object.keys(burst)).toEqual(["id", "title", "description", "unit", "lowerIsBetter", "results", "statistic"]);
+    expect(Object.keys(burst.results[0]!)).toEqual(["candidateId", "value", "samples"]);
+  });
+
   test("names the run after the rig", () => {
     expect(rigSlug("Apple M2 Max")).toBe("m2-max");
     expect(rigSlug("AWS Graviton3")).toBe("aws-graviton3");
@@ -127,5 +166,56 @@ describe("oha parsing", () => {
     expect(pass.completed).toBe(0);
     expect(pass.p99Ms).toBeNull();
     expect(pass.meanMs).toBeNull();
+  });
+});
+
+describe("enrich", () => {
+  const fresh = buildRun(orderResults(RAW), META);
+  const withoutSamples = (run: unknown): string => JSON.stringify(run, (key: string, value: unknown) => (key === "statistic" || key === "samples" ? undefined : value), 2) + "\n";
+  const stage = (raw: RawResults, runText = withoutSamples(fresh)): { runPath: string; resultsPath: string; runText: string } => {
+    const dir = mkdtempSync(join(tmpdir(), "enrich-"));
+    const runPath = join(dir, "run.json");
+    const resultsPath = join(dir, "results.json");
+    writeFileSync(runPath, runText);
+    writeFileSync(resultsPath, JSON.stringify(raw, null, 2) + "\n");
+    return { runPath, resultsPath, runText };
+  };
+
+  test("adds the statistic and the samples to a published run and changes nothing else", async () => {
+    const { runPath, resultsPath, runText } = stage(RAW);
+    expect(runText).not.toContain('"samples"');
+    await enrichRunFile(runPath, resultsPath);
+    const enriched: unknown = JSON.parse(readFileSync(runPath, "utf8"));
+    expect(enriched).toEqual(fresh);
+    expect(withoutSamples(enriched)).toBe(runText);
+  });
+
+  test("refuses results whose value differs from the published one, naming the test", async () => {
+    const perturbed = structuredClone(RAW);
+    perturbed.results.find((r) => r.engine === "martin")!.burst.maxMs += 1;
+    const { runPath, resultsPath, runText } = stage(perturbed);
+    await expect(enrichRunFile(runPath, resultsPath)).rejects.toThrow("viewport-burst/burst-max martin");
+    expect(readFileSync(runPath, "utf8")).toBe(runText);
+  });
+
+  test("refuses samples that do not summarize to the published value, naming the test", async () => {
+    const perturbed = structuredClone(RAW);
+    const samples = perturbed.results.find((r) => r.engine === "martin")!.single["buildings-z14"]!.samplesMs;
+    samples[0] = samples[0]! + 3;
+    const { runPath, resultsPath, runText } = stage(perturbed);
+    await expect(enrichRunFile(runPath, resultsPath)).rejects.toThrow("single-tile-latency/mean-buildings-z14 martin");
+    expect(readFileSync(runPath, "utf8")).toBe(runText);
+  });
+
+  test("refuses a run file that is not in the importer's format", async () => {
+    const { runPath, resultsPath } = stage(RAW, JSON.stringify(JSON.parse(withoutSamples(fresh))));
+    await expect(enrichRunFile(runPath, resultsPath)).rejects.toThrow("format");
+  });
+
+  test("holds a recomputed value to half a unit in the value's last digit", () => {
+    expect(agrees(44.174, 44.1744)).toBe(true);
+    expect(agrees(44.174, 44.1746)).toBe(false);
+    expect(agrees(500, 500.5)).toBe(true);
+    expect(agrees(500, 500.51)).toBe(false);
   });
 });

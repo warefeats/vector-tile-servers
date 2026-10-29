@@ -42,3 +42,7 @@ clean:
 
 import RESULTS="results.json":
     bun run src/import.ts --results={{RESULTS}}
+
+# Add each test's statistic and per-pass samples to a run file published without them, from the results it was imported from.
+enrich RUN RESULTS="results.json":
+    bun run src/enrich.ts --run={{RUN}} --results={{RESULTS}}

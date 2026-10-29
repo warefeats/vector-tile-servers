@@ -164,6 +164,8 @@ Results are written to `results.json` (gitignored) after every engine. `--output
 3. Write the verdict and limitations in `benchmark.json` from the run data, commit and merge the run file with it.
 4. In the site repo (`warefeats/warefeats.com`): bump this benchmark's `ref` in `web/data/registry.json` to the merge commit SHA, run `bun run sync`, commit registry + cache, merge, deploy.
 
+A run file published before the importer carried per-pass samples gets them from its raw results with `just enrich runs/<run>.json results.json`: each test gains its `statistic` and each result its `samples`, nothing else in the file changes, and the enrich refuses if any value in the run file differs from the one the results give.
+
 Do not pin this repo in the site registry until a run file exists; the site's `sync` fails on an empty `runs` list.
 
 ## Tests
